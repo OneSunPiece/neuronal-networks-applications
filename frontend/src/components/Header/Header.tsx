@@ -38,7 +38,7 @@ export default function Example() {
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
         
         <div className="flex lg:flex">
-          <a href="#" className="-m-1.5 p-1.5">
+          <a href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">RNA Homework Labs</span>
             
               <img  className='w-16 md:w-16 lg:w-16' alt="RNA Homework Labs" src="metaverse.png" />
@@ -91,10 +91,10 @@ export default function Example() {
             </PopoverPanel>
           </Popover>
 
-          <a href="#about-us" className="text-sm/6 font-semibold text-gray-900">
+          <a href="/about-us" className="text-sm/6 font-semibold text-gray-900">
             About Us
           </a>
-          <a href="#" className="text-sm/6 font-semibold text-gray-900">
+          <a href="https://github.com/OneSunPiece/neuronal-networks-applications" className="text-sm/6 font-semibold text-gray-900">
             Repo
           </a>
         </PopoverGroup>
@@ -104,8 +104,8 @@ export default function Example() {
         <div className="fixed inset-0 z-10" />
         <DialogPanel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
           <div className="flex items-center justify-between">
-            <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">Your Company</span>
+            <a href="/" className="-m-1.5 p-1.5">
+              <span className="sr-only">RNA</span>
               <img  className='w-16 md:w-16 lg:w-16' alt="RNA Homework Labs" src="metaverse.png" />
             </a>
             <button
@@ -122,7 +122,7 @@ export default function Example() {
               <div className="space-y-2 py-6">
                 <Disclosure as="div" className="-mx-3">
                   <DisclosureButton className="group flex w-full items-center justify-between rounded-lg py-2 pr-3.5 pl-3 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">
-                    Product
+                    Models
                     <ChevronDownIcon aria-hidden="true" className="size-5 flex-none group-data-open:rotate-180" />
                   </DisclosureButton>
                   <DisclosurePanel className="mt-2 space-y-2">
@@ -139,13 +139,13 @@ export default function Example() {
                   </DisclosurePanel>
                 </Disclosure>
                 <a
-                  href="#about-us"
+                  href="/about-us"
                   className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
                 >
                   About Us
                 </a>
                 <a
-                  href=""
+                  href="https://github.com/OneSunPiece/neuronal-networks-applications"
                   className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
                 >
                   Repo
