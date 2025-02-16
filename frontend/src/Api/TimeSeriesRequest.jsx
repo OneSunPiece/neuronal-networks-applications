@@ -1,4 +1,4 @@
-export async function timeSeriesRequest(features) {
+export async function TimeSeriesRequest(features) {
     const API_URL = ''
 
     try {
@@ -23,4 +23,3 @@ export async function timeSeriesRequest(features) {
       return { prediction: "Error occurred" };
     }
   }
-  
