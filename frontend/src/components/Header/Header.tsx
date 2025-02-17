@@ -24,9 +24,9 @@ import {
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 const models = [
-  { name: 'Time Series', description: 'Plot and predict time series', href: 'series', icon: ChartPieIcon },
-  { name: 'Recommendations', description: 'Get some recommendations', href: 'recommendations', icon: CursorArrowRaysIcon },
-  { name: 'Image Classifier', description: 'Classify images', href: 'images', icon: PhotoIcon }
+  { name: 'Time Series', description: 'Plot and predict time series', href: '/series', icon: ChartPieIcon },
+  { name: 'Recommendations', description: 'Get some recommendations', href: '/recommendations', icon: CursorArrowRaysIcon },
+  { name: 'Image Classifier', description: 'Classify images', href: '/images', icon: PhotoIcon }
 ]
 
 
@@ -40,9 +40,7 @@ export default function Example() {
         <div className="flex lg:flex">
           <a href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">RNA Homework Labs</span>
-            
-              <img  className='w-16 md:w-16 lg:w-16' alt="RNA Homework Labs" src="metaverse.png" />
-            
+              <img  className='w-16 md:w-16 lg:w-16' alt="RNA Homework Labs" src="/metaverse.png" />
           </a>
         </div>
         {/*<--! This is the mobile menu button -->*/}

@@ -3,7 +3,7 @@ import Attribution  from '../components/Attribution/Attribution';
 
 const links = [
   { name: 'Video', href: '#' },
-  { name: 'Report', href: '#' },
+  { name: 'Report', href: 'https://www.notion.so/Proyecto-3-19c41332c4ff80dbb331f50424f10da1' },
 ]
 
 
