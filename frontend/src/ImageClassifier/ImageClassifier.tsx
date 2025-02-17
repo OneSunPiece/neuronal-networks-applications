@@ -48,11 +48,13 @@ export default function ImageClassifier() {
       <div className="space-y-12">
         <div className="border-b border-gray-900/10 pb-12">
           <h2 className="text-base/7 font-semibold text-gray-900">Image Classifier</h2>
-          <p className="mt-1 text-sm/6 text-gray-600">
+
           {classification ? 
-            <p>Classification: {classification}</p> : <p>Upload an image to classify</p>
+            <p className="mt-1 text-sm/6 text-gray-600">Classification: {classification}</p>
+            : 
+            <p className="mt-1 text-sm/6 text-gray-600">Upload an image to classify</p>
           }
-          </p>
+
 
           <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="col-span-full">

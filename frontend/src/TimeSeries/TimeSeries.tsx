@@ -1,10 +1,15 @@
 import { useState } from "react";
-//import PropTypes from 'prop-types';
 import "./TimeSeries.css";
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
+import TimeSeriesChart from "../components/TimeSeriesChart/TimeSeriesChart";
+
+interface DataPoint {
+  date: string;
+  value: number;
+}
 
 export default function TimeSeries() {
-  const [predictions, setPredictions] = useState<string | null>(null);
+  const [predictions, setPredictions] = useState<DataPoint[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isPredicted, setIsPredicted] = useState<boolean>(false);
   const [selectedTienda, setSelectedTienda] = useState<string>("");
@@ -20,8 +25,15 @@ export default function TimeSeries() {
     { name: 'Departamento 2'},
     { name: 'Departamento 3'}
   ];
-  const TimeSeriesRequest = async (selectedTienda: string,selectedDepartamento: string) => {
-    const data = [ selectedTienda, selectedDepartamento ];
+
+  const timeSeriesDummyData: DataPoint[] = Array.from({ length: 60 }, (_, i) => ({
+    date: new Date(2025, 0, 10 + i).toISOString().split("T")[0],
+    value: Math.floor(Math.random() * (250 - 120 + 1)) + 120,
+  }));
+  
+
+  const TimeSeriesRequest = async (selectedTienda: string, selectedDepartamento: string) => {
+    const data = { selectedTienda, selectedDepartamento };
 
     const response = await fetch(`/api/time-series`, {
       method: "POST",
@@ -36,24 +48,25 @@ export default function TimeSeries() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
     setIsLoading(true); // Set loading to true before the request is sent
+
     if (!selectedTienda || !selectedDepartamento) {
       alert("Please select a tienda and a departamento first.");
+      setIsLoading(false);
       return;
     }
 
     try {
-      const result = await TimeSeriesRequest(selectedTienda,selectedDepartamento);
-      setPredictions(result.prediction);
+      const result = await TimeSeriesRequest(selectedTienda, selectedDepartamento);
+      const predictionData: DataPoint[] = result.prediction.map((value: string, index: number) => ({ x: index + 1, y: value }));
+      setPredictions(predictionData);
       setIsPredicted(true);
-      setIsLoading(false);
     } catch (error) {
+      setIsPredicted(true); // @TODO: REMOVE THIS LINE
       console.error('Error sending prediction request:', error);
     } finally {
       // Set loading to false after the request is completed
       setIsLoading(false); 
-      setIsPredicted(true);
     }
   };
 
@@ -66,7 +79,7 @@ export default function TimeSeries() {
           <p className="mt-1 text-sm/6 text-gray-600">
             Select the time series you want to analyze.
           </p>
-          {isLoading ? <h2>Loading...</h2> : <h2>Loaading...</h2>}
+          {isLoading ? <h2>Loading...</h2> : null}
         </div>
 
         <div className="border-b border-gray-900/10 pb-12">
@@ -97,7 +110,7 @@ export default function TimeSeries() {
               </div>
             </div>
           </div>
-            
+
           <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="sm:col-span-3">
               <label htmlFor="tienda" className="block text-sm/6 font-medium text-gray-900">
@@ -136,7 +149,8 @@ export default function TimeSeries() {
           Send
         </button>
       </div>
-      { isPredicted ? predictions : null }
+      { predictions ? null : null } {/* @TODO: REMOVE THIS*/}
+      { isPredicted ? <TimeSeriesChart data={timeSeriesDummyData}/> : null }
     </form>
   )
 }
