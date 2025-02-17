@@ -76,7 +76,7 @@ def get_actual_last(train_data, days=120):
     return actual_last
 
 # Graficar el forecast y guardar la imagen
-def plot_forecast(actual_last, forecast_df, store, dept, forecast_color='tab:orange'):
+def plot_forecast(actual_last, forecast_df, store, dept, forecast_color='tab:blue'):
     plt.figure(figsize=(12,6))
     plt.plot(actual_last['Date'], actual_last['Sales'], label='Ventas Reales (Últimos 120 días)', marker='o')
     plt.plot(forecast_df['Date'], forecast_df['Sales'], label='Pronóstico (Primer Mes Predicho)', marker='x', linestyle='--', color=forecast_color)
@@ -144,7 +144,7 @@ def process_forecast(store, dept, df_train, df_test, window_size=4, n_forecast=3
     forecast_df = pd.DataFrame({'Date': forecast_dates_first_month, 'Sales': forecast_first_month.flatten()})
     actual_last = get_actual_last(train_data, days=120)
     combined_df = pd.concat([actual_last, forecast_df], ignore_index=True)
-    plot_filename = plot_forecast(actual_last, forecast_df, store, dept, forecast_color='tab:orange')
+    plot_filename = plot_forecast(actual_last, forecast_df, store, dept, forecast_color='tab:blue')
     csv_filename = f"forecast/store_{store}_dept_{dept}.csv"
     combined_df.to_csv(csv_filename, index=False)
     print(f"Guardado gráfico en: {plot_filename}")
@@ -201,6 +201,20 @@ if __name__ == "__main__":
         print(f" - R²: {r2:.2f}")
         print(f" - MedAE: {medae:.2f}")
         print(f" - MAPE: {mape*100:.2f}%")
+        # Guardar métricas en CSV
+        metrics_dict = {
+            "Store": store,
+            "Dept": dept,
+            "RMSE": rmse,
+            "MAE": mae,
+            "R2": r2,
+            "MedAE": medae,
+            "MAPE": mape
+        }
+        metrics_df = pd.DataFrame([metrics_dict])
+        metrics_csv_filename = f"forecast/metrics_store_{store}_dept_{dept}.csv"
+        metrics_df.to_csv(metrics_csv_filename, index=False)
+        print(f"Guardadas métricas en: {metrics_csv_filename}")
     # Generar y graficar predicciones in-sample para el conjunto de entrenamiento
     model, scaler, sales_scaled = build_and_train_model(train_data, window_size=window_size)
     train_predictions = forecast_on_train(model, scaler, sales_scaled, window_size=window_size)
