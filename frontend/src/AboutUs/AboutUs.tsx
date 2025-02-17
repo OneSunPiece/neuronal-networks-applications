@@ -1,4 +1,3 @@
-import React from 'react';
 import './AboutUs.css';
 import Attribution  from '../components/Attribution/Attribution';
 
