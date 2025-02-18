@@ -273,12 +273,15 @@ def lambda_handler(event, _):
             #    window_size=window_size
             #    )
             print(f"Train Predictions: {forecasted_serie}")
-
+            
+            # 
+            forecasted_serie["Date"] = forecasted_serie["Date"].astype(str)
             # Return the prediction
-            json_response = {
-                "dates": forecasted_serie["Date"].tolist(),
-                "sales": forecasted_serie["Sales"].tolist()
-            }
+            json_response = forecasted_serie.to_dict(orient="records")
+            #json_response = {
+            #    "dates": forecasted_serie["Date"].tolist(),
+            #    "sales": forecasted_serie["Sales"].tolist()
+            #}
 
             return {
                 'statusCode': 200,
