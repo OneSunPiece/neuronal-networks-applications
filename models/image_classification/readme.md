@@ -48,9 +48,7 @@ Compilamos y entrenamos el modelo utilizando la estrategia de aprendizaje transf
 
 En este punto se usa el algoritmo adam de optimización, funció de pérdida usada en clasificación multiclase y se mide la optimicación del modelo. Establecemos como máximo 30 epoch pero utilizando early_stopping para que el modelo se detenga si no mejora despues de 5 epoch.
 
-### Guardado  Una vez entrenado el modelo, realizamos dos pasos clave:
-
-# Guardar el modelo para su uso futuro.
+### Guardado  Una vez entrenado el modelo.
 
 Se guarda en formato .h5 ya que permite almacenar la arquitectura, pesos y configuración de entrenamiento en un solo archivo. Siendo compatible con TensorFlow y Keras, facilitando su carga posterior sin necesidad de reentrenarlo.
 Dicho modelo .h5 se encuentra adjunto en el repositorio.
