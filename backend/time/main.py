@@ -40,7 +40,7 @@ def load_files_from_s3()->None:
     global test_df
     
     # If the model is already loaded, return it
-    if train_df and test_df is not None:
+    if train_df is not None and not train_df.empty and test_df is not None and not test_df.empty:
         print("Dataset already loaded.")
         return None
 
@@ -256,9 +256,11 @@ def lambda_handler(event, _):
             store = int(input_data[1])
 
             # Load the DATA if not already loaded
+            print('Loading files...')
             load_files_from_s3()
 
             # Make the forecast
+            print('Making forecast...')
             forecasted_serie = process_forecast(store, dept, train_df, test_df, window_size=window_size, n_forecast=n_forecast)
             #train_data = train_df[(train_df['Store'] == store) & (train_df['Dept'] == dept)].copy()
             

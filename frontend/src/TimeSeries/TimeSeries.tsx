@@ -15,39 +15,48 @@ export default function TimeSeries() {
   const [selectedTienda, setSelectedTienda] = useState<string>("");
   const [selectedDepartamento, setSelectedDepartamento] = useState<string>("");
 
-  const tiendas = [
-    { name: 'Tienda 1'},
-    { name: 'Tienda 2'},
-    { name: 'Tienda 3'}
-  ];
-  const departamentos = [
-    { name: 'Departamento 1'},
-    { name: 'Departamento 2'},
-    { name: 'Departamento 3'}
-  ];
-
-  const timeSeriesDummyData: DataPoint[] = Array.from({ length: 60 }, (_, i) => ({
-    date: new Date(2025, 0, 10 + i).toISOString().split("T")[0],
-    value: Math.floor(Math.random() * (250 - 120 + 1)) + 120,
+  const tiendas = Array.from({ length: 81 }, (_, i) => ({
+    name: `Tienda ${i + 1}`,
+    value: i + 1,
   }));
+
+  const departamentos = Array.from({ length: 45 }, (_, i) => ({
+    name: `Departamento ${i + 1}`,
+    value: i + 1,
+  }));
+
+  //const timeSeriesDummyData: DataPoint[] = Array.from({ length: 60 }, (_, i) => ({
+  //  date: new Date(2025, 0, 10 + i).toISOString().split("T")[0],
+  //  value: Math.floor(Math.random() * (250 - 120 + 1)) + 120,
+  //}));
   
 
-  const TimeSeriesRequest = async (selectedTienda: string, selectedDepartamento: string) => {
-    const data = { selectedTienda, selectedDepartamento };
+  const TimeSeriesRequest = async (selectedTienda: number, selectedDepartamento: number) => {
+    const URL = "https://wlkriva5lvjlswgxwob5hzpena0aoizq.lambda-url.us-east-1.on.aws/";
+    const data = [ selectedTienda, selectedDepartamento ];
+    const body_format = {
+    data: data
+    };
 
-    const response = await fetch(`/api/time-series`, {
+    console.log("Sending request to:", URL);
+    console.log("Data:", body_format);
+    const response = await fetch(URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(body_format),
     });
+    console.log("Request sent.");
+
     const result = await response.json();
+    console.log("Response:", result);
     return result;
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsPredicted(false);
     setIsLoading(true); // Set loading to true before the request is sent
 
     if (!selectedTienda || !selectedDepartamento) {
@@ -57,13 +66,22 @@ export default function TimeSeries() {
     }
 
     try {
-      const result = await TimeSeriesRequest(selectedTienda, selectedDepartamento);
-      const predictionData: DataPoint[] = result.prediction.map((value: string, index: number) => ({ x: index + 1, y: value }));
+      
+      const result = await TimeSeriesRequest(Number(selectedTienda), Number(selectedDepartamento));
+
+      //const predictionData: DataPoint[] = result.prediction.map((value: string, index: number) => ({ x: index + 1, y: value }));
+      let predictionData: DataPoint[] = result.prediction.map((item: { Date: string; Sales: number }) => ({
+        date: item.Date,
+        value: item.Sales,
+      }));
+
+      predictionData = predictionData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
       setPredictions(predictionData);
       setIsPredicted(true);
     } catch (error) {
-      setIsPredicted(true); // @TODO: REMOVE THIS LINE
       console.error('Error sending prediction request:', error);
+      setIsLoading(false); 
     } finally {
       // Set loading to false after the request is completed
       setIsLoading(false); 
@@ -100,7 +118,7 @@ export default function TimeSeries() {
                 >
                   <option value="">Select an option</option>
                   {departamentos.map((departamento) => (
-                    <option key={departamento.name} value={departamento.name}>{departamento.name}</option>
+                    <option key={departamento.name} value={departamento.value}>{departamento.name}</option>
                   ))}
                 </select>
                 <ChevronDownIcon
@@ -127,7 +145,7 @@ export default function TimeSeries() {
                 >
                   <option value="">Select an option</option>
                   {tiendas.map((item) => (
-                    <option key={item.name} value={item.name}>{item.name}</option>
+                    <option key={item.name} value={item.value}>{item.name}</option>
                   ))}
                 </select>
                 <ChevronDownIcon
@@ -149,8 +167,18 @@ export default function TimeSeries() {
           Send
         </button>
       </div>
-      { predictions ? null : null } {/* @TODO: REMOVE THIS*/}
-      { isPredicted ? <TimeSeriesChart data={timeSeriesDummyData}/> : null }
+      { 
+      isLoading ? 
+        <div>
+          <h2 className="text-base/7 font-semibold text-gray-900 text-center">Loading...</h2>
+          <small className="block mt-8 text-sm/6 text-gray-500 text-center">
+                (This can take a while, usually 1 minute max.)
+          </small>
+        </div> 
+        : 
+        null 
+      }
+      { isPredicted ? <TimeSeriesChart data={predictions || []}/> : null }
     </form>
   )
 }

@@ -6,9 +6,13 @@ from tensorflow.keras.preprocessing import image
 from tensorflow.keras.utils import img_to_array
 # Others
 import numpy as np
+from PIL import Image
+import base64
 import pickle
-import os
 import boto3
+import os
+import io
+
 
 S3_BUCKET: str = 'myawzbucket'
 
@@ -123,6 +127,23 @@ def lambda_handler(event, _):
 
     class_labels = ['jeans', 'sofa', 'tshirt', 'tv']
     test_image = load_test_image()
+    # Try to get the input data from the event
+    try:
+        print('Getting input data...')
+        body = json.loads(event['body'])
+        print('Extracting data...')
+        input_data = body['data']
+        image_bytes = base64.b64decode(input_data)
+        # Convert to PIL image
+        pil_image = Image.open(io.BytesIO(image_bytes))
+        image_array = np.array(pil_image)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'ERROR': 'Invalid input. No input data'})
+        }
 
     try:
         print("Downloading model...")
