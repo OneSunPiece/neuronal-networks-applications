@@ -4,6 +4,9 @@ import json
 import boto3
 import os
 
+#global top_k_neighbors
+#global name_to_idx_map
+#global frame 
 global status_error
 
 S3_BUCKET: str = 'myawzbucket'
@@ -31,7 +34,7 @@ def is_valid_data(input_data):
     """
 
     # Check if the input data is a list
-    if not input_data or not isinstance(input_data, int):
+    if not input_data or not isinstance(input_data, str):
         status_error = {
             'statusCode': 400,
             'body': json.dumps({'ERROR': 'Invalid input. Provide an integer for the input data.'})
@@ -108,10 +111,13 @@ def lambda_handler(event, context):
         body = event.get("body")
         if body:
             # Parse the JSON string
+            print(f'Parsing stuff ::: {body}')
             parsed_body = json.loads(body)
             # Access the "features" key inside "data"
+            print('Getting data')
             input_data = parsed_body.get("data")
             # Get the type and length of the input data
+            print('Getting TYPES')
             type_data = type(input_data)
             # Debugging logs
             print(f'Input Data: {str(input_data)}')
@@ -122,18 +128,19 @@ def lambda_handler(event, context):
                 print('Valid Input')
 
                 # Download the files from S3
+                print("Downloading from S3...")
                 load_files_from_s3(TOP_NEIGHBORS_PATH, TOP_NEIGHBORS_PATH_S3)
                 load_files_from_s3(NAME_TO_IDX_MAP_PATH, NAME_TO_IDX_MAP_PATH_S3)
                 load_files_from_s3(FRAME_PATH, FRAME_PATH_S3)
-                print("All Loaded in the lambda")
+  
 
                 # Get the ready to use data
                 top_k_neighbors, name_to_idx_map, frame = import_files()
                 print("Variables ready")
 
                 # Put the number of the product here
-                selected_product = input_data
-                product = frame['name'].iloc[selected_product]
+                product = input_data
+                #product = frame['name'].iloc[selected_product]
                 print(f'Product: {product}')
 
                 # Get recommended products
