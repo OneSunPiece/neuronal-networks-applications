@@ -6,7 +6,9 @@ export default function ImageClassifier() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [classification, setClassification] = useState<string | null>(null);
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string | null>('Hello there!');
+  
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -15,36 +17,51 @@ export default function ImageClassifier() {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault(); // Prevent default form submission
+  
     if (!selectedImage) {
-      alert("Please select an image first.");
+      alert('Please select an image first.');
       return;
     }
-
+  
+    console.log('Uploading image...');
+    const ENDPOINT = "https://aoeh6vcujuok4fhiqq3p3ujsiq0gyxld.lambda-url.us-east-1.on.aws/";
+    setIsLoading(true);
+  
+    // Creating FormData object to send the file and metadata
     const formData = new FormData();
-    formData.append("image", selectedImage);
-
+    formData.append('file', selectedImage);
+    formData.append('fileName', selectedImage.name);
+    formData.append('fileType', selectedImage.type);
+  
     try {
-      const response = await fetch("YOUR_BACKEND_URL", {
-        method: "POST",
-        body: formData,
+      console.log('Sending image to the classifier...');
+      const response = await fetch(ENDPOINT, {
+        method: 'POST',
+        body: formData, // Body now includes FormData
       });
-
+      console.log('Response:', response);
+  
       if (!response.ok) {
-        throw new Error("Failed to upload image");
+        throw new Error('Network response was not ok');
       }
-
-      const result = await response.json();
-      setClassification(result.classification);
-      console.log("Image uploaded successfully:", result);
+  
+      const responseData = await response.json();
+      console.log('Image uploaded successfully:', responseData);
+      setClassification(responseData.message);
+      setMessage(`Image uploaded successfully: ${responseData.message}`);
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.log('Error uploading the image.');
+      setMessage('Error uploading the image.');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} method="POST" encType="multipart/form-data">
       <div className="space-y-12">
         <div className="border-b border-gray-900/10 pb-12">
           <h2 className="text-base/7 font-semibold text-gray-900">Image Classifier</h2>
@@ -54,7 +71,6 @@ export default function ImageClassifier() {
             : 
             <p className="mt-1 text-sm/6 text-gray-600">Upload an image to classify</p>
           }
-
 
           <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="col-span-full">
@@ -85,6 +101,13 @@ export default function ImageClassifier() {
               
             </div>
           </div>
+          {isLoading ? 
+            <p className="mt-8 text-sm/6 text-gray-500">Loading...</p> 
+            :
+            <small className="block mt-8 text-sm/6 text-gray-500">
+              {message}
+            </small>
+            }
         </div>
       </div>
 
