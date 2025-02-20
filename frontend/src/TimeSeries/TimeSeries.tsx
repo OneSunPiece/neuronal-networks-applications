@@ -15,12 +15,12 @@ export default function TimeSeries() {
   const [selectedTienda, setSelectedTienda] = useState<string>("");
   const [selectedDepartamento, setSelectedDepartamento] = useState<string>("");
 
-  const tiendas = Array.from({ length: 81 }, (_, i) => ({
+  const tiendas = Array.from({ length: 45 }, (_, i) => ({
     name: `Tienda ${i + 1}`,
     value: i + 1,
   }));
 
-  const departamentos = Array.from({ length: 45 }, (_, i) => ({
+  const departamentos = Array.from({ length: 81 }, (_, i) => ({
     name: `Departamento ${i + 1}`,
     value: i + 1,
   }));
@@ -33,7 +33,7 @@ export default function TimeSeries() {
 
   const TimeSeriesRequest = async (selectedTienda: number, selectedDepartamento: number) => {
     const URL = "https://wlkriva5lvjlswgxwob5hzpena0aoizq.lambda-url.us-east-1.on.aws/";
-    const data = [ selectedTienda, selectedDepartamento ];
+    const data = [ selectedDepartamento, selectedTienda ];
     const body_format = {
     data: data
     };
@@ -178,7 +178,12 @@ export default function TimeSeries() {
         : 
         null 
       }
-      { isPredicted ? <TimeSeriesChart data={predictions || []}/> : null }
+      { isPredicted ? <>
+        <small className="block mt-8 text-sm/6 text-gray-500 ">
+                (Red are the predicted values)
+        </small>
+        <TimeSeriesChart data={predictions || []}/>
+        </ > : null }
     </form>
   )
 }

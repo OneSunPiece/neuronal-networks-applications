@@ -137,6 +137,7 @@ def get_forecast_dates(test_data):
     first_forecast_date = all_forecast_dates.iloc[0]
     mask_first_month = (all_forecast_dates.dt.month == first_forecast_date.month) & (all_forecast_dates.dt.year == first_forecast_date.year)
     forecast_dates_first_month = all_forecast_dates[mask_first_month].reset_index(drop=True)
+    print(f"First forecast month: {forecast_dates_first_month.iloc[0]}")
     return forecast_dates_first_month
 
 # Obtener los últimos días reales del conjunto de entrenamiento
@@ -174,6 +175,8 @@ def forecast_series(model, scaler, sales_scaled, window_size=4, n_forecast=30):
     forecast_full = scaler.inverse_transform(np.array(forecast_scaled).reshape(-1, 1))
     return forecast_full
 
+#
+
 def build_and_train_model(train_data, window_size=4, epochs=50, batch_size=32):
     # Escalar la variable 'Weekly_Sales'
     scaler = MinMaxScaler()
@@ -195,28 +198,66 @@ def build_and_train_model(train_data, window_size=4, epochs=50, batch_size=32):
 
     return model, scaler, sales_scaled
 
-# Procesar y generar el forecast para una tienda y departamento dados
+
 def process_forecast(store, dept, df_train, df_test, window_size=4, n_forecast=30):
+    # Filtrar datos de train para la tienda y dept especificados
     train_data = df_train[(df_train['Store'] == store) & (df_train['Dept'] == dept)].copy()
     train_data.sort_values('Date', inplace=True)
+
+    # Verificar que haya suficientes datos para entrenar
     if len(train_data) < window_size + 1:
         print(f"Datos insuficientes para Store {store} Dept {dept}.")
         return None, None
-    model, scaler, sales_scaled = build_and_train_model(train_data, window_size=window_size)
-    forecast_full = forecast_series(model, scaler, sales_scaled, window_size=window_size, n_forecast=n_forecast)
-    test_data = df_test[(df_test['Store'] == store) & (df_test['Dept'] == dept)].copy()
-    test_data.sort_values('Date', inplace=True)
-    if test_data.empty:
-        print(f"No hay datos de test para Store {store} Dept {dept}.")
-        return None, None
-    forecast_dates_first_month = get_forecast_dates(test_data)
-    n_first_month = len(forecast_dates_first_month)
-    forecast_first_month = forecast_full[:n_first_month]
-    forecast_df = pd.DataFrame({'Date': forecast_dates_first_month, 'Sales': forecast_first_month.flatten()})
-    actual_last = get_actual_last(train_data, days=120)
-    combined_df = pd.concat([actual_last, forecast_df], ignore_index=True)
-    return combined_df
 
+    # Entrenar el modelo
+    model, scaler, sales_scaled = build_and_train_model(train_data, window_size=window_size)
+
+    # Realizar la predicción recursiva de n_forecast períodos
+    forecast_full = forecast_series(model, scaler, sales_scaled, window_size=window_size, n_forecast=n_forecast)
+
+    # Obtener los últimos 120 días reales del train
+    actual_last = get_actual_last(train_data, days=120)
+    
+    # Obtener las fechas del primer mes predicho a partir del test
+    forecast_dates_first_month = add_weekly_forecast(actual_last, forecast_full)
+    #print(f'forecast_dates_first_month:\n {forecast_dates_first_month}')
+    #n_first_month = len(forecast_dates_first_month)
+
+    #  guardar el gráfico
+    # plot_forecast(actual_last, forecast_df, store, dept, forecast_color='tab:green')
+    
+    return forecast_dates_first_month
+
+def add_weekly_forecast(df, forecast_sales):
+    """
+    Añade una lista de valores de ventas al DataFrame con las siguientes 5 fechas semanales.
+    
+    :param df: DataFrame con columnas 'Date' y 'Sales'
+    :param forecast_sales: Lista de valores de ventas a añadir
+    :return: DataFrame actualizado con las nuevas fechas y valores de ventas
+    """
+    if 'Date' not in df.columns or 'Sales' not in df.columns:
+        raise ValueError("El DataFrame debe contener las columnas 'Date' y 'Sales'")
+    # truncar los primeros 5 valores de forecast_sales
+    forecast_sales = forecast_sales[:5]
+    print(f'forecast_sales {forecast_sales}')
+    
+    # Obtener la última fecha del DataFrame
+    last_date = df['Date'].max()
+    
+    # Generar las siguientes 5 fechas semanales
+    new_dates = [last_date + pd.Timedelta(weeks=i) for i in range(1, 6)]
+    
+    # Crear un DataFrame con las nuevas fechas y valores de ventas
+    new_data = pd.DataFrame({
+        'Date': new_dates,
+        'Sales': forecast_sales.flatten()
+    })
+    #print(f'new_data {new_data}')
+    # Concatenar el DataFrame original con el nuevo DataFrame
+    updated_df = pd.concat([df, new_data], ignore_index=True)
+    
+    return updated_df
 
 def lambda_handler(event, _):
     """
@@ -262,29 +303,13 @@ def lambda_handler(event, _):
             # Make the forecast
             print('Making forecast...')
             forecasted_serie = process_forecast(store, dept, train_df, test_df, window_size=window_size, n_forecast=n_forecast)
-            #train_data = train_df[(train_df['Store'] == store) & (train_df['Dept'] == dept)].copy()
-            
-            # Training the model
-            #model, scaler, sales_scaled = build_and_train_model(train_data, window_size=window_size)
-            
-            # Get the predictions on the train data
-            #train_predictions = forecast_on_train(
-            #    model,
-            #    scaler,
-            #    sales_scaled,
-            #    window_size=window_size
-            #    )
             print(f"Train Predictions: {forecasted_serie}")
             
-            # 
+            # Transform the Date column to string
             forecasted_serie["Date"] = forecasted_serie["Date"].astype(str)
-            # Return the prediction
+            # Convert the DataFrame to a list of dictionaries
             json_response = forecasted_serie.to_dict(orient="records")
-            #json_response = {
-            #    "dates": forecasted_serie["Date"].tolist(),
-            #    "sales": forecasted_serie["Sales"].tolist()
-            #}
-
+            # Return the prediction
             return {
                 'statusCode': 200,
                 'body': json.dumps({'prediction': json_response})
