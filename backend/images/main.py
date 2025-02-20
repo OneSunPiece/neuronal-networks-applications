@@ -48,23 +48,23 @@ def load_model_from_s3(lambda_path,s3_path)->None:
     model = tf.keras.models.load_model(lambda_path)
     print("Model loaded.")
 
-def load_image_from_s3(file_name)->None:
+def load_image_from_s3(file_name):
     """
     Load the image from S3 
     return: model
     params: None
     raise: Exception if the model file does not exist in S3
     """
-    s3_path = file_name['image']
+    #s3_path = file_name
     img_path = '/tmp/img.jpg'
     print("Downloading THE IMAGE from S3...")
     # Check if the files exists
     if not os.path.exists(img_path):
         print("On it...")
-        print(f'S3 ROUTE: {S3_IMAGES_BUCKET}/{s3_path} \n LAMBDA_PATH: {img_path}')
+        print(f'S3 ROUTE: {S3_IMAGES_BUCKET}/{file_name} \n LAMBDA_PATH: {img_path}')
         #print(f'{S3_BUCKET} --- {s3_path} --- {lambda_path}')
         #s3.download_file(S3_BUCKET, s3_path, lambda_path)
-        s3.download_file(S3_IMAGES_BUCKET, s3_path, img_path)
+        s3.download_file(S3_IMAGES_BUCKET, file_name, img_path)
         print("Files downloaded.")
     print("Image downloaded.")
     
@@ -161,6 +161,7 @@ def lambda_handler(event, _):
         parsed_body = json.loads(body)
         input_data = parsed_body.get("data")
         print('Extracting data...')
+        print(input_data)
 
     except Exception as e:
         print(f"Error: {e}")
