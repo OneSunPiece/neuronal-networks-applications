@@ -2,8 +2,8 @@
 import json
 # ML Libraries
 import tensorflow as tf
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.utils import img_to_array
+from tensorflow.keras.preprocessing import image # type: ignore
+from tensorflow.keras.utils import img_to_array # type: ignore
 # Others
 import numpy as np
 from PIL import Image
@@ -15,6 +15,7 @@ import io
 
 
 S3_BUCKET: str = 'myawzbucket'
+S3_IMAGES_BUCKET: str = 'mybucketforuploadimages'
 
 # Temporary paths to store files in the Lambda env
 LAMBDA_PATH_MODEL:str = '/tmp/model_images.h5'
@@ -47,6 +48,32 @@ def load_model_from_s3(lambda_path,s3_path)->None:
     model = tf.keras.models.load_model(lambda_path)
     print("Model loaded.")
 
+def load_image_from_s3(file_name)->None:
+    """
+    Load the image from S3 
+    return: model
+    params: None
+    raise: Exception if the model file does not exist in S3
+    """
+    s3_path = file_name['image']
+    img_path = '/tmp/img.jpg'
+    print("Downloading THE IMAGE from S3...")
+    # Check if the files exists
+    if not os.path.exists(img_path):
+        print("On it...")
+        print(f'S3 ROUTE: {S3_IMAGES_BUCKET}/{s3_path} \n LAMBDA_PATH: {img_path}')
+        #print(f'{S3_BUCKET} --- {s3_path} --- {lambda_path}')
+        #s3.download_file(S3_BUCKET, s3_path, lambda_path)
+        s3.download_file(S3_IMAGES_BUCKET, s3_path, img_path)
+        print("Files downloaded.")
+    print("Image downloaded.")
+    
+    img = image.load_img(img_path, target_size=(244, 244))
+    
+    print("Image loaded.")
+
+    return img
+
 def is_valid_data(input_data):
     """
     Validate the input data.
@@ -73,7 +100,7 @@ def load_test_image():
     raise: Exception if the model file does not exist in S3
     """
     print("Downloading TEST IMAGE from S3...")
-    s3.download_file(S3_BUCKET, 'images/pants.jpg', '/tmp/pants.jpg')
+    s3.download_file(S3_IMAGES_BUCKET, 'pants.jpg', '/tmp/pants.jpg')
     print("Image downloaded.")
     img_path = '/tmp/pants.jpg'
     test_image = image.load_img(img_path, target_size=(244, 244))
@@ -126,23 +153,32 @@ def lambda_handler(event, _):
     global status_error
 
     class_labels = ['jeans', 'sofa', 'tshirt', 'tv']
-    test_image = load_test_image()
+    #test_image = load_test_image()
     # Try to get the input data from the event
     try:
         print('Getting input data...')
-        body = json.loads(event['body'])
+        body = event.get("body")
+        parsed_body = json.loads(body)
+        input_data = parsed_body.get("data")
         print('Extracting data...')
-        input_data = body['data']
-        image_bytes = base64.b64decode(input_data)
-        # Convert to PIL image
-        pil_image = Image.open(io.BytesIO(image_bytes))
-        image_array = np.array(pil_image)
 
     except Exception as e:
         print(f"Error: {e}")
         return {
             'statusCode': 400,
-            'body': json.dumps({'ERROR': 'Invalid input. No input data'})
+            'body': json.dumps({'ERROR': f'Invalid input. No input data: {e}'})
+        }
+    
+    # Try to download the image from S3
+    try:
+        print("Downloading image...")
+        selected_image = load_image_from_s3(input_data)
+        print("Image downloaded.")
+    except Exception as e:
+        print(f"Error: {e}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
         }
 
     try:
@@ -150,8 +186,7 @@ def lambda_handler(event, _):
         load_model_from_s3(LAMBDA_PATH_MODEL, S3_PATH_MODEL)
         # preprocesar la imagen
         print('Processing image...')
-        print(test_image)
-        img_array = process_image(test_image)
+        img_array = process_image(selected_image)
         # Realizar predicción
         print('Making prediction...')
         predictions = model.predict(img_array)
@@ -167,5 +202,5 @@ def lambda_handler(event, _):
         print(f"Error: {e}")
         return {
             'statusCode': 500,
-            'body': [json.dumps({'error': str(e)}), 'aaaaaa']
+            'body': [json.dumps({'error': str(e)}), 'Life is hard buddy']
         }
