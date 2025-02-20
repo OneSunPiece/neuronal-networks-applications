@@ -27,6 +27,7 @@ export default function ImageClassifier() {
   
     console.log('Uploading image...');
     const ENDPOINT = "https://aoeh6vcujuok4fhiqq3p3ujsiq0gyxld.lambda-url.us-east-1.on.aws/";
+    const ENDPOINT2 = "https://pndo5w4iylkqcp47ofwz2dcpvm0hobgg.lambda-url.us-east-1.on.aws/";
     setIsLoading(true);
   
     // Creating FormData object to send the file and metadata
@@ -39,7 +40,7 @@ export default function ImageClassifier() {
       console.log('Sending image to the classifier...');
       const response = await fetch(ENDPOINT, {
         method: 'POST',
-        body: formData, // Body now includes FormData
+        body: formData// formData, // Body now includes FormData
       });
       console.log('Response:', response);
   
@@ -48,9 +49,37 @@ export default function ImageClassifier() {
       }
   
       const responseData = await response.json();
-      console.log('Image uploaded successfully:', responseData);
+      console.log('Uploaded');
       setClassification(responseData.message);
-      setMessage(`Image uploaded successfully: ${responseData.message}`);
+      setMessage(`Image uploaded successfully`);
+      
+      //  Send the classification to the next endpoint
+      try{
+        console.log('Loading classification...');
+        
+        const body_format = {
+          data: responseData
+          };
+        const response2 = await fetch(ENDPOINT2, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body_format)
+        });
+        console.log('Response:', response2);
+        if (!response2.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const responseData2 = await response2.json();
+        console.log('Classification:', responseData2);
+        setClassification(responseData2.message);
+        setMessage(`Classification: ${responseData2.prediction}`);
+      } catch (error) {
+        console.error('Error sending classification:', error);
+        setIsLoading(false);
+      }
+      // End of the second endpoint
     } catch (error) {
       console.log('Error uploading the image.');
       setMessage('Error uploading the image.');
@@ -75,7 +104,7 @@ export default function ImageClassifier() {
           <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="col-span-full">
               <label htmlFor="cover-photo" className="block text-sm/6 font-medium text-gray-900">
-                Cover photo
+                Upload Photos of 'jeans', 'sofa', 'tshirt', 'tv'
               </label>
               
               <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
@@ -95,7 +124,7 @@ export default function ImageClassifier() {
                     </label>
                     <p className="pl-1">or drag and drop</p>
                   </div>
-                  <p className="text-xs/5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
+                  <p className="text-xs/5 text-gray-600">Just JPG, up to 5MB for now</p>
                 </div>
               </div>
               
@@ -104,9 +133,9 @@ export default function ImageClassifier() {
           {isLoading ? 
             <p className="mt-8 text-sm/6 text-gray-500">Loading...</p> 
             :
-            <small className="block mt-8 text-sm/6 text-gray-500">
+            <h3 className="block mt-8 text-sm/6 text-gray-800 text-center">
               {message}
-            </small>
+            </h3>
             }
         </div>
       </div>
