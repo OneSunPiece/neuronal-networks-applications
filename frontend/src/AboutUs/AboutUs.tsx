@@ -2,8 +2,8 @@ import './AboutUs.css';
 import Attribution  from '../components/Attribution/Attribution';
 
 const links = [
-  { name: 'Video', href: '#' },
-  { name: 'Report', href: 'https://www.notion.so/Proyecto-3-19c41332c4ff80dbb331f50424f10da1' },
+  { name: 'Video', href: 'https://www.youtube.com/watch?v=Px9BWpaVwiw' },
+  { name: 'Report', href: 'https://oceanic-witch-157.notion.site/Trabajo-03-Aplicaciones-de-Redes-Neuronales-19c41332c4ff80dbb331f50424f10da1?pvs=4#' },
 ]
 
 
